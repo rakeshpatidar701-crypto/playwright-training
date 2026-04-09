@@ -61,4 +61,30 @@ test.describe('SauceDemo', () => {
     await page.getByRole('button', { name: 'Finish' }).click();
     await expect(page.getByText('Thank you for your order!')).toBeVisible();
   });
+
+  test('should logout successfully', async ({ page }) => {
+    await page.goto('https://www.saucedemo.com/');
+    await page.getByPlaceholder('Username').fill('standard_user');
+    await page.getByPlaceholder('Password').fill('secret_sauce');
+    await page.getByRole('button', { name: 'Login' }).click();
+
+    await page.getByRole('button', { name: 'Open Menu' }).click();
+    await page.getByRole('link', { name: 'Logout' }).click();
+
+    await expect(page).toHaveURL('https://www.saucedemo.com/');
+});
+
+test('should sort products by price low to high', async ({ page }) => {
+  await page.goto('https://www.saucedemo.com/');
+  await page.getByPlaceholder('Username').fill('standard_user');
+  await page.getByPlaceholder('Password').fill('secret_sauce');
+  await page.getByRole('button', { name: 'Login' }).click();
+
+  await page.getByRole('combobox').selectOption('lohi');
+
+  const prices = await page.locator('.inventory_item_price').allTextContents();
+  const numericPrices = prices.map(p => parseFloat(p.replace('$', '')));
+
+  expect(numericPrices[0]).toBeLessThanOrEqual(numericPrices[1]);
+});
 });
