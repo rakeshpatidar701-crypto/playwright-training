@@ -1,18 +1,64 @@
 import { test, expect } from '@playwright/test';
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+test.describe('SauceDemo', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('https://www.saucedemo.com/');
+  });
 
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
-});
+  test('should login with valid credentials', async ({ page }) => {
+    await page.getByPlaceholder('Username').fill('standard_user');
+    await page.getByPlaceholder('Password').fill('secret_sauce');
+    await page.getByRole('button', { name: 'Login' }).click();
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+    await expect(page).toHaveURL(/inventory/);
+    await expect(page.getByText('Products')).toBeVisible();
+  });
 
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Get started' }).click();
+  test('should show an error for invalid login', async ({ page }) => {
+    await page.getByPlaceholder('Username').fill('locked_out_user');
+    await page.getByPlaceholder('Password').fill('wrong_password');
+    await page.getByRole('button', { name: 'Login' }).click();
 
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+    await expect(page.getByText(/Epic sadface/i)).toBeVisible();
+  });
+
+  test('should add one item to the cart', async ({ page }) => {
+    await page.getByPlaceholder('Username').fill('standard_user');
+    await page.getByPlaceholder('Password').fill('secret_sauce');
+    await page.getByRole('button', { name: 'Login' }).click();
+
+    await page.getByRole('button', { name: 'Add to cart' }).first().click();
+    await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
+  });
+
+  test('should remove an item from the cart', async ({ page }) => {
+    await page.getByPlaceholder('Username').fill('standard_user');
+    await page.getByPlaceholder('Password').fill('secret_sauce');
+    await page.getByRole('button', { name: 'Login' }).click();
+
+    await page.getByRole('button', { name: 'Add to cart' }).first().click();
+    await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
+
+    await page.getByRole('button', { name: 'Remove' }).first().click();
+    await expect(page.locator('.shopping_cart_badge')).toHaveCount(0);
+  });
+
+  test('should complete checkout successfully', async ({ page }) => {
+    await page.getByPlaceholder('Username').fill('standard_user');
+    await page.getByPlaceholder('Password').fill('secret_sauce');
+    await page.getByRole('button', { name: 'Login' }).click();
+
+    await page.getByRole('button', { name: 'Add to cart' }).first().click();
+    await page.locator('.shopping_cart_link').click();
+    await page.getByRole('button', { name: 'Checkout' }).click();
+
+    await page.getByPlaceholder('First Name').fill('Test');
+    await page.getByPlaceholder('Last Name').fill('User');
+    await page.getByPlaceholder('Zip/Postal Code').fill('12345');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await expect(page.getByText('Checkout: Overview')).toBeVisible();
+    await page.getByRole('button', { name: 'Finish' }).click();
+    await expect(page.getByText('Thank you for your order!')).toBeVisible();
+  });
 });
