@@ -1,19 +1,21 @@
 import { expect, Page } from '@playwright/test';
 
 export class InventoryPage {
-  readonly page: Page;
+  constructor(private page: Page) {}
 
-  constructor(page: Page) {
-    this.page = page;
-  }
-
-  async assertInventoryPageLoaded() {
+  async assertPageLoaded() {
     await expect(this.page).toHaveURL(/inventory/);
     await expect(this.page.getByText('Products')).toBeVisible();
   }
 
   async addFirstItemToCart() {
     await this.page.getByRole('button', { name: 'Add to cart' }).first().click();
+  }
+
+  async addItemsToCart(count: number) {
+    for (let i = 0; i < count; i++) {
+      await this.page.getByRole('button', { name: 'Add to cart' }).first().click();
+    }
   }
 
   async removeFirstItemFromCart() {
@@ -39,18 +41,14 @@ export class InventoryPage {
     await this.page.getByRole('link', { name: 'Logout' }).click();
   }
 
-  async sortByPriceLowToHigh() {
+  async sortByLowToHigh() {
     await this.page.getByRole('combobox').selectOption('lohi');
   }
 
-  async getProductPrices(): Promise<number[]> {
-    const prices = await this.page.locator('.inventory_item_price').allTextContents();
-    return prices.map(price => Number(price.replace('$', '').trim()));
-  }
-
   async assertPricesSortedLowToHigh() {
-    const actualPrices = await this.getProductPrices();
-    const expectedPrices = [...actualPrices].sort((a, b) => a - b);
-    expect(actualPrices).toEqual(expectedPrices);
+    const prices = await this.page.locator('.inventory_item_price').allTextContents();
+    const actual = prices.map(price => Number(price.replace('$', '').trim()));
+    const expected = [...actual].sort((a, b) => a - b);
+    expect(actual).toEqual(expected);
   }
 }

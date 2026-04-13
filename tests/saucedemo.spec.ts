@@ -1,14 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { InventoryPage } from '../pages/InventoryPage';
+import { CheckoutPage } from '../pages/CheckoutPage';
 
 test.describe('SauceDemo - authentication', () => {
   test('should login with valid credentials', async ({ page }) => {
     const loginPage = new LoginPage(page);
+    const inventoryPage = new InventoryPage(page);
 
     await loginPage.goto();
     await loginPage.loginAsStandardUser();
-    await loginPage.assertLoginSuccess();
+    await inventoryPage.assertPageLoaded();
   });
 
   test('should show an error for invalid login', async ({ page }) => {
@@ -27,7 +29,7 @@ test.describe('SauceDemo - authenticated flows', () => {
 
     await loginPage.goto();
     await loginPage.loginAsStandardUser();
-    await inventoryPage.assertInventoryPageLoaded();
+    await inventoryPage.assertPageLoaded();
   });
 
   test('should add one item to the cart', async ({ page }) => {
@@ -42,26 +44,41 @@ test.describe('SauceDemo - authenticated flows', () => {
 
     await inventoryPage.addFirstItemToCart();
     await inventoryPage.assertCartBadgeCount(1);
-
     await inventoryPage.removeFirstItemFromCart();
     await inventoryPage.assertCartBadgeCount(0);
   });
 
   test('should complete checkout successfully', async ({ page }) => {
     const inventoryPage = new InventoryPage(page);
+    const checkoutPage = new CheckoutPage(page);
 
     await inventoryPage.addFirstItemToCart();
     await inventoryPage.openCart();
+    await checkoutPage.clickCheckout();
+    await checkoutPage.fillCheckoutInformation('Test', 'User', '12345');
+    await checkoutPage.assertOverviewPageVisible();
+    await checkoutPage.finishCheckout();
+    await checkoutPage.assertOrderSuccess();
+  });
 
-    await page.getByRole('button', { name: 'Checkout' }).click();
-    await page.getByPlaceholder('First Name').fill('Test');
-    await page.getByPlaceholder('Last Name').fill('User');
-    await page.getByPlaceholder('Zip/Postal Code').fill('12345');
-    await page.getByRole('button', { name: 'Continue' }).click();
+  test('should add 2 items and complete checkout end-to-end', async ({ page }) => {
+    const inventoryPage = new InventoryPage(page);
+    const checkoutPage = new CheckoutPage(page);
 
-    await expect(page.getByText('Checkout: Overview')).toBeVisible();
-    await page.getByRole('button', { name: 'Finish' }).click();
-    await expect(page.getByText('Thank you for your order!')).toBeVisible();
+    await inventoryPage.addItemsToCart(2);
+    await inventoryPage.assertCartBadgeCount(2);
+
+    await inventoryPage.openCart();
+    await checkoutPage.assertItemCount(2);
+
+    await checkoutPage.clickCheckout();
+    await checkoutPage.fillCheckoutInformation('Jane', 'Doe', '90210');
+
+    await checkoutPage.assertOverviewPageVisible();
+    await checkoutPage.assertItemCount(2);
+
+    await checkoutPage.finishCheckout();
+    await checkoutPage.assertOrderSuccess();
   });
 
   test('should logout successfully', async ({ page }) => {
@@ -74,7 +91,7 @@ test.describe('SauceDemo - authenticated flows', () => {
   test('should sort products by price low to high', async ({ page }) => {
     const inventoryPage = new InventoryPage(page);
 
-    await inventoryPage.sortByPriceLowToHigh();
+    await inventoryPage.sortByLowToHigh();
     await inventoryPage.assertPricesSortedLowToHigh();
   });
 });
