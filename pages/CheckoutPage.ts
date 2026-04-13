@@ -15,6 +15,7 @@ export class CheckoutPage {
   }
 
   async assertOverviewPageVisible() {
+    await expect(this.page).toHaveURL(/checkout-step-two/);
     await expect(this.page.getByText('Checkout: Overview')).toBeVisible();
   }
 
@@ -23,10 +24,13 @@ export class CheckoutPage {
   }
 
   async assertItemCount(expected: number) {
-    await expect(this.page.locator('.cart_item')).toHaveCount(expected);
+    await expect(this.page.getByTestId('inventory-item')).toHaveCount(expected);
   }
 
   async assertOrderSuccess() {
-    await expect(this.page.getByText('Thank you for your order!')).toBeVisible();
+    await expect(this.page).toHaveURL(/checkout-complete/);
+    await expect(
+      this.page.getByRole('heading', { name: 'Thank you for your order!' }),
+    ).toBeVisible();
   }
 }

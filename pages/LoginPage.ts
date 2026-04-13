@@ -17,6 +17,11 @@ export class LoginPage {
     await this.login('standard_user', 'secret_sauce');
   }
 
+  async assertPageVisible() {
+    await expect(this.page).toHaveURL('https://www.saucedemo.com/');
+    await expect(this.page.getByRole('button', { name: 'Login' })).toBeVisible();
+  }
+
   async assertLoginError() {
     await expect(this.page.getByText(/Epic sadface/i)).toBeVisible();
   }

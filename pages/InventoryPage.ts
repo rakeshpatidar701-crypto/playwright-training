@@ -5,11 +5,8 @@ export class InventoryPage {
 
   async assertPageLoaded() {
     await expect(this.page).toHaveURL(/inventory/);
+    await expect(this.page).toHaveTitle('Swag Labs');
     await expect(this.page.getByText('Products')).toBeVisible();
-  }
-
-  async addFirstItemToCart() {
-    await this.page.getByRole('button', { name: 'Add to cart' }).first().click();
   }
 
   async addItemsToCart(count: number) {
@@ -23,7 +20,7 @@ export class InventoryPage {
   }
 
   async assertCartBadgeCount(count: number) {
-    const badge = this.page.locator('.shopping_cart_badge');
+    const badge = this.page.getByTestId('shopping-cart-badge');
 
     if (count === 0) {
       await expect(badge).toHaveCount(0);
@@ -33,7 +30,7 @@ export class InventoryPage {
   }
 
   async openCart() {
-    await this.page.locator('.shopping_cart_link').click();
+    await this.page.getByTestId('shopping-cart-link').click();
   }
 
   async logout() {
@@ -46,7 +43,7 @@ export class InventoryPage {
   }
 
   async assertPricesSortedLowToHigh() {
-    const prices = await this.page.locator('.inventory_item_price').allTextContents();
+    const prices = await this.page.getByTestId('inventory-item-price').allTextContents();
     const actual = prices.map(price => Number(price.replace('$', '').trim()));
     const expected = [...actual].sort((a, b) => a - b);
     expect(actual).toEqual(expected);
