@@ -3,10 +3,6 @@ import { expect, Page } from '@playwright/test';
 export class CheckoutPage {
   constructor(private page: Page) {}
 
-  async clickCheckout() {
-    await this.page.getByRole('button', { name: 'Checkout' }).click();
-  }
-
   async fillCheckoutInformation(firstName: string, lastName: string, zip: string) {
     await this.page.getByPlaceholder('First Name').fill(firstName);
     await this.page.getByPlaceholder('Last Name').fill(lastName);

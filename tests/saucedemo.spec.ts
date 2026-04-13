@@ -33,17 +33,41 @@ test.describe('SauceDemo - authenticated flows', () => {
     await inventoryPage.assertCartBadgeCount(0);
   });
 
+  test('should verify cart items and remove one', async ({ inventoryPage, cartPage }) => {
+    await inventoryPage.addItemsToCart(2);
+    await inventoryPage.openCart();
+
+    await cartPage.assertPageVisible();
+    await cartPage.assertItemCount(2);
+
+    const [firstItem] = await cartPage.getItemNames();
+    await cartPage.removeItem(firstItem);
+    await cartPage.assertItemCount(1);
+  });
+
+  test('should continue shopping from cart', async ({ inventoryPage, cartPage }) => {
+    await inventoryPage.addItemsToCart(1);
+    await inventoryPage.openCart();
+    await cartPage.assertPageVisible();
+
+    await cartPage.continueShopping();
+    await inventoryPage.assertPageLoaded();
+    await inventoryPage.assertCartBadgeCount(1);
+  });
+
   test('should add 2 items and complete checkout end-to-end', async ({
     inventoryPage,
+    cartPage,
     checkoutPage,
   }) => {
     await inventoryPage.addItemsToCart(2);
     await inventoryPage.assertCartBadgeCount(2);
 
     await inventoryPage.openCart();
-    await checkoutPage.assertItemCount(2);
+    await cartPage.assertPageVisible();
+    await cartPage.assertItemCount(2);
 
-    await checkoutPage.clickCheckout();
+    await cartPage.clickCheckout();
     await checkoutPage.fillCheckoutInformation('Jane', 'Doe', '90210');
 
     await checkoutPage.assertOverviewPageVisible();
